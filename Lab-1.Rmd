@@ -1,0 +1,365 @@
+---
+title: " <b><font color = 'black'>GEOG 597: Lab 1 - Point Pattern Analysis</font></b>"
+author: "Afroza Hossain Misty"
+date: "<b><font color = 'slategrey'>February 3th, 2023</font></b>"
+output:
+  html_document:
+    toc: true
+    toc_float: 
+      toc_float: true
+      collapsed: false
+    toc_depth: 2
+    theme: journal
+editor_options: 
+  chunk_output_type: console
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, error=FALSE,results='none'}
+
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(sf))
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(tmap))
+suppressPackageStartupMessages(library(spatstat))
+tmap_mode('plot')
+```
+
+
+# <b><font color='midnightblue'>Nearest Neighbor Analysis</font></b>
+
+
+
+## Parks
+
+```{r}
+# Read in the sf package
+require(sf)
+
+# Read in the parks
+parks <- st_read("D:\\MURP\\Winter 2023\\GEOG597_Advanced Quantitative Analy_R\\Lab 1\\parks.shp", quiet = T)
+
+park_points <- st_coordinates(parks)
+
+plot(park_points,col='purple',cex=1.3,axes=T,xlab="X",ylab="Y",main="Parks Plots")
+```
+
+```{r}
+dist <- st_distance(parks,parks) %>% 
+    units::drop_units() # Makes it easier to work with!
+```
+
+
+```{r}
+# Convert instances of points being 0m from themselves to NA - this will ignore them when searching for their nearest neighbor
+dist[dist == 0] <- NA
+
+# This will loop through each row of the distance matrix `dist` and find the distance to the nearest neighbor
+NND <- apply(X = dist,     # Loop through the `dist` matrix  
+             MARGIN = 1,   # Loop by rows; in a distance matrix, it doesn't matter which you chose
+             min,          # For each row, return the minimum value
+             na.rm = TRUE) # Additional argument passed to `min` to ignore NA values
+
+# Now we have the Average Nearest Neighbor distance:
+mean(NND)
+```
+
+```{r}
+## Read in the InnerEast shapefile:
+inner_east <- st_read("D:\\MURP\\Winter 2023\\GEOG597_Advanced Quantitative Analy_R\\Lab 1\\innereast.shp")
+
+# Calculate the area (byid defaults to `FALSE`, but I want to point out that this will give us total area. If we set it to TRUE
+# we would get a vector for the area of each polygon!)
+inner_east_area <- st_area(inner_east, byid = FALSE)
+
+# Solve for density:
+park_density <- nrow(parks)/inner_east_area
+park_density
+```
+
+```{r}
+parks_z <- 1.913 * (0.8157 - 1) * sqrt(nrow(parks))
+parks_z
+```
+
+*z-score*: -4.245456
+  
+*Conclusion*: We have to reject the Null Hypothesis ($H_0$) as Z < -1.96 and the z-score indicates that pattern of the parks is clustered.
+
+
+## Elementary Schools
+
+```{r}
+# Read in the sf package
+require(sf)
+
+# Read in the elementary schools
+elemschs <- st_read("D:\\MURP\\Winter 2023\\GEOG597_Advanced Quantitative Analy_R\\Lab 1\\elemsch.shp", quiet = T)
+
+elemschs_points <- st_coordinates(elemschs)
+
+plot(elemschs_points,col='orange',cex=1.3,axes=T,xlab="X",ylab="Y",main="Elementary Schools Plots")
+```
+
+```{r}
+dist <- st_distance(elemschs,elemschs) %>% 
+    units::drop_units() # Makes it easier to work with!
+```
+
+```{r}
+# Convert instances of points being 0m from themselves to NA - this will ignore them when searching for their nearest neighbor
+dist[dist == 0] <- NA
+
+# This will loop through each row of the distance matrix `dist` and find the distance to the nearest neighbor
+NND <- apply(X = dist,     # Loop through the `dist` matrix  
+             MARGIN = 1,   # Loop by rows; in a distance matrix, it doesn't matter which you chose
+             min,          # For each row, return the minimum value
+             na.rm = TRUE) # Additional argument passed to `min` to ignore NA values
+
+# Now we have the Average Nearest Neighbor distance:
+mean(NND)
+```
+
+```{r}
+## Read in the InnerEast shapefile:
+inner_east <- st_read("D:\\MURP\\Winter 2023\\GEOG597_Advanced Quantitative Analy_R\\Lab 1\\innereast.shp")
+
+# Calculate the area (byid defaults to `FALSE`, but I want to point out that this will give us total area. If we set it to TRUE
+# we would get a vector for the area of each polygon!)
+inner_east_area <- st_area(inner_east, byid = FALSE)
+
+# Solve for density:
+elemsch_density <- nrow(elemschs)/inner_east_area
+elemsch_density
+```
+
+```{r}
+elemschs_z <- 1.913 * (0.8157 - 1) * sqrt(nrow(elemschs))
+elemschs_z
+```
+
+*z-score*: -1.49581
+  
+*Conclusion*: We can not reject the Null Hypothesis ($H_0$) as z score is between -1.96 and +1.96. The pattern shown could very likely to be a random spatial process.
+
+
+## Fire Stations
+
+```{r}
+# Read in the sf package
+require(sf)
+
+# Read in the elementary schools
+fire_sta <- st_read("D:\\MURP\\Winter 2023\\GEOG597_Advanced Quantitative Analy_R\\Lab 1\\fire_sta.shp", quiet = T)
+
+fire_sta_points <- st_coordinates(fire_sta)
+
+plot(fire_sta_points,col='red',cex=1.3,axes=T,xlab="X",ylab="Y",main="Fire Stations Plots")
+```
+
+```{r}
+dist <- st_distance(fire_sta,fire_sta) %>% 
+    units::drop_units() # Makes it easier to work with!
+```
+
+```{r}
+# Convert instances of points being 0m from themselves to NA - this will ignore them when searching for their nearest neighbor
+dist[dist == 0] <- NA
+
+# This will loop through each row of the distance matrix `dist` and find the distance to the nearest neighbor
+NND <- apply(X = dist,     # Loop through the `dist` matrix  
+             MARGIN = 1,   # Loop by rows; in a distance matrix, it doesn't matter which you chose
+             min,          # For each row, return the minimum value
+             na.rm = TRUE) # Additional argument passed to `min` to ignore NA values
+
+# Now we have the Average Nearest Neighbor distance:
+mean(NND)
+```
+
+```{r}
+## Read in the InnerEast shapefile:
+inner_east <- st_read("D:\\MURP\\Winter 2023\\GEOG597_Advanced Quantitative Analy_R\\Lab 1\\innereast.shp")
+
+# Calculate the area (byid defaults to `FALSE`, but I want to point out that this will give us total area. If we set it to TRUE
+# we would get a vector for the area of each polygon!
+inner_east_area <- st_area(inner_east, byid = FALSE)
+
+# Solve for density:
+fire_sta_density <- nrow(fire_sta)/inner_east_area
+fire_sta_density
+```
+
+```{r}
+fire_sta_z <- 1.913 * (0.8157 - 1) * sqrt(nrow(fire_sta))
+fire_sta_z
+```
+
+*z-score*: -3.862166
+  
+*Conclusion*: We have to reject the Null Hypothesis ($H_0$) as Z < -1.96 and the z-score indicates that pattern of the parks is clustered.
+
+
+
+# <b><font color='midnightblue'>Ripley's K Function</font></b>  
+
+
+
+```{r warning=FALSE, error=FALSE,results='none'}
+require(spatstat)
+```
+
+
+## Defining a new boundary
+
+
+```{r echo=F}
+cities <- st_read('D:\\MURP\\Winter 2023\\GEOG597_Advanced Quantitative Analy_R\\Lab 1\\cty_fill.shp', quiet = T)
+```
+
+```{r}
+portland <- cities[cities$CITYNAME == 'Portland',]
+plot(st_geometry(portland)) # Just plot the geometry
+```
+
+
+
+## Light Rail Stops
+
+```{r echo=FALSE}
+lrt_stop <- st_read('D:\\MURP\\Winter 2023\\GEOG597_Advanced Quantitative Analy_R\\Lab 1\\lrt_stop.shp', quiet = T)
+lrt_stop <- lrt_stop[portland,] # Filter where lrt_stop is in the portland shape
+plot(st_geometry(portland)) # plot only the shape
+points(st_coordinates(lrt_stop),col='red') # Plot only the x/y of the stops
+```
+
+```{r warning=FALSE}
+lrt_stop_ppp <- as.ppp(lrt_stop) # Convert the points to a ppp object
+lrt_stop_ppp$window <- as.owin(portland) # Update the boundary to that of of the Portland outline
+```
+
+```{r}
+k_ls <- envelope(Y = lrt_stop_ppp,
+fun = Kest,
+nsim = 99,
+funargs = list(correction = 'border', rmax = 10000),
+verbose = F)
+
+plot(k_ls, main = "Ripley's K - Monte-Carlo simulation for Light Rail Stops")
+```
+
+*Conclusion*: In Ripley's K-Monte-Carlo simulation, where the line is above the confidence interval window it means clustering, where the line is below the confidence interval window it means dispersed, and finally where the line is within the confidence interval window it fails to reject the Null hypothesis. Because this line is above the confidence interval window, there is significant clustering in the data.
+
+
+## Schools
+
+```{r echo=FALSE}
+schools <- st_read('D:\\MURP\\Winter 2023\\GEOG597_Advanced Quantitative Analy_R\\Lab 1\\schools.shp', quiet = T)
+schools <- schools[portland,] # Filter where schools is in the portland shape
+plot(st_geometry(portland)) # plot only the shape
+points(st_coordinates(schools),col='red') # Plot only the x/y of the schools
+```
+
+```{r warning=FALSE}
+sch_ppp <- as.ppp(schools) # Convert the points to a ppp object
+sch_ppp$window <- as.owin(portland) # Update the boundary to that of of the Portland outline
+```
+
+```{r}
+k_sch <- envelope(Y = sch_ppp,
+fun = Kest,
+nsim = 99,
+funargs = list(correction = 'border', rmax = 20000),
+verbose = F)
+
+plot(k_sch, main = "Ripley's K - Monte-Carlo simulation for Schools")
+```
+
+*Conclusion*: Because this line is above the confidence interval window, there is significant clustering in the data.
+
+
+## Fire Station
+
+```{r echo=FALSE}
+fir_st <- st_read('D:\\MURP\\Winter 2023\\GEOG597_Advanced Quantitative Analy_R\\Lab 1\\fire_sta.shp', quiet = T)
+fir_st <- fir_st[portland,] # Filter where fire stations is in the portland shape
+plot(st_geometry(portland)) # plot only the shape
+points(st_coordinates(fir_st),col='red') # Plot only the x/y of the fire stations
+```
+
+```{r warning=FALSE}
+fir_st_ppp <- as.ppp(fir_st) # Convert the points to a ppp object
+fir_st_ppp$window <- as.owin(portland) # Update the boundary to that of of the Portland outline
+```
+
+```{r}
+k_fir_st <- envelope(Y = fir_st_ppp,
+fun = Kest,
+nsim = 99,
+funargs = list(correction = 'border', rmax = 10000),
+verbose = F)
+
+plot(k_fir_st, main = "Ripley's K - Monte-Carlo simulation for Fire Stations")
+```
+
+*Conclusion*: The line is within the confidence index. So it fails to reject the null hypothesis.
+
+
+## Community Center
+
+```{r echo=FALSE}
+com <- st_read('D:\\MURP\\Winter 2023\\GEOG597_Advanced Quantitative Analy_R\\Lab 1\\community_centers.shp', quiet = T)
+com <- com[portland,] # Filter where community centers is in the portland shape
+plot(st_geometry(portland)) # plot only the shape
+points(st_coordinates(com),col='red') # Plot only the x/y of the community centers
+```
+
+```{r warning=FALSE}
+com_ppp <- as.ppp(com) # Convert the points to a ppp object
+com_ppp$window <- as.owin(portland) # Update the boundary to that of of the Portland outline
+```
+
+```{r}
+k_com <- envelope(Y = com_ppp,
+fun = Kest,
+nsim = 99,
+funargs = list(correction = 'border', rmax = 10000),
+verbose = F)
+
+plot(k_com, main = "Ripley's K - Monte-Carlo simulation for Community Centers")
+```
+
+*Conclusion*: Because this line is above the confidence interval window, there is significant clustering in the data.
+
+
+## Parks
+
+```{r echo=FALSE}
+prk <- st_read('D:\\MURP\\Winter 2023\\GEOG597_Advanced Quantitative Analy_R\\Lab 1\\orca.shp', quiet = T) %>%
+  dplyr::filter(UNITTYPE == "Park") %>%
+  st_centroid() %>%
+  .[portland,]
+
+plot(st_geometry(portland)) # plot only the shape
+points(st_coordinates(prk),col='red') 
+```
+
+```{r warning=FALSE}
+prk_ppp <- as.ppp(prk) # Convert the points to a ppp object
+prk_ppp$window <- as.owin(portland) # Update the boundary to that of of the Portland outline
+```
+
+```{r}
+k_prk <- envelope(Y = prk_ppp,
+fun = Kest,
+nsim = 99,
+funargs = list(correction = 'border', rmax = 20000),
+verbose = F)
+
+plot(k_prk, main = "Ripley's K - Monte-Carlo simulation for Parks")
+```
+
+*Conclusion*: Since some parts of the line are slightly above and slightly below the confidence level, it can be said that Park's data show both clustering and dispersion.
+
+
